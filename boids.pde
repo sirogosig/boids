@@ -1,3 +1,8 @@
+// Three rules: (friend = spatially close boid)
+// Rule one : take same direction as friends
+// Rule two : stay close to friends
+// Rule three: don't get in very close contact with friends
+
 ArrayList<Boid> boids;
 ArrayList<Avoid> avoids;
 
@@ -38,7 +43,6 @@ void setup () {
   setupWalls();
 }
 
-// haha
 void recalculateConstants () {
   maxSpeed = 2.1 * globalScale;
   friendRadius = 60 * globalScale;

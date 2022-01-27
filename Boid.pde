@@ -6,7 +6,7 @@ class Boid {
   ArrayList<Boid> friends;
 
   // timers
-  int thinkTimer = 0;
+  int thinkTimer = 0; // = 0,1,2,3 or 4
 
 
   Boid (float xx, float yy) {
@@ -21,7 +21,7 @@ class Boid {
 
   void go () {
     increment();
-    wrap();
+    wrap(); // so that boids appear left when they reach full right of the screen
 
     if (thinkTimer ==0 ) {
       // update our friend array (lots of square roots)
@@ -32,7 +32,7 @@ class Boid {
   }
 
   void flock () {
-    PVector allign = getAverageDir();
+    PVector allign = getAverageDir(); //Average direction of friends (Rule one)
     PVector avoidDir = getAvoidDir(); 
     PVector avoidObjects = getAvoidAvoids();
     PVector noise = new PVector(random(2) - 1, random(2) -1);
@@ -73,8 +73,7 @@ class Boid {
     for (int i =0; i < boids.size(); i++) {
       Boid test = boids.get(i);
       if (test == this) continue;
-      if (abs(test.pos.x - this.pos.x) < friendRadius &&
-        abs(test.pos.y - this.pos.y) < friendRadius) {
+      if (abs(test.pos.x - this.pos.x) < friendRadius && abs(test.pos.y - this.pos.y) < friendRadius) {
         nearby.add(test);
       }
     }
