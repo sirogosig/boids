@@ -196,6 +196,7 @@ void erase () {
       boids.remove(i);
     }
   }
+}
   
 void eat_food (float xx, float yy){//Dan when prey reaches food, use this function to eat food
   for (int i = 0; i < foods.size(); i++){
@@ -204,7 +205,6 @@ void eat_food (float xx, float yy){//Dan when prey reaches food, use this functi
       foods.remove(f);
     }
   }
-}
 
   for (int i = avoids.size()-1; i > -1; i--) {
     Avoid b = avoids.get(i);
