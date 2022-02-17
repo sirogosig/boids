@@ -1,10 +1,22 @@
+float tagged_probability=0.2;
+
+char threshold_mode = 't';  //No communication between tags
+float activation_threshold=250;
+
+char swarm_mode = 's';      //Communication between tags
+float activated_tags_percentage=0.5;
+
+char mode=threshold_mode; // Set mode HERE
+
 class Boid {
   // main fields
   PVector pos;
   PVector move;
   float shade;
+  boolean tagged=false;
+  boolean tag_on=false;
   ArrayList<Boid> friends;
-  ArrayList<Food> eats; // ziye
+  ArrayList<Food> eats;
 
   // timers
   int thinkTimer = 0;
@@ -19,19 +31,26 @@ class Boid {
     shade = random(255);
     friends = new ArrayList<Boid>();
     eats = new ArrayList<Food>();
+    
+    float temp=random(1);
+    if(temp<tagged_probability) tagged=true;
+    tag_on=false;
   }
 
   void go () {
     increment();
     wrap();
 
-    if (thinkTimer ==0 ) {
+    getTagActivation();
+    
+    // We update friend array every 5 go's
+    if (thinkTimer ==0 ) { 
       // update our friend array (lots of square roots)
       getFriends();
     }
     flock();
     pos.add(move);
-    eat(); // ziye
+    //eat();
   }
 
   void flock () {
@@ -40,8 +59,9 @@ class Boid {
     PVector avoidObjects = getAvoidAvoids();
     PVector noise = new PVector(random(2) - 1, random(2) -1);
     PVector cohese = getCohesion();
-    PVector hunger = getHunger(); // ziye
+    PVector danger = getDanger();
 
+    // Setting up different coefficients:
     allign.mult(1);
     if (!option_friend) allign.mult(0);
     
@@ -54,10 +74,11 @@ class Boid {
     noise.mult(0.1);
     if (!option_noise) noise.mult(0);
 
-    cohese.mult(1);
+    cohese.mult(2);
     if (!option_cohese) cohese.mult(0);
     
-    hunger.mult(5); // ziye
+    danger.mult(2);
+    if (!option_danger) cohese.mult(0);
     
     stroke(0, 255, 160);
 
@@ -66,7 +87,7 @@ class Boid {
     move.add(avoidObjects);
     move.add(noise);
     move.add(cohese);
-    move.add(hunger); // ziye
+    move.add(danger);
 
     move.limit(maxSpeed);
     
@@ -103,6 +124,34 @@ class Boid {
     }
     if (count == 0) return 0;
     return total / (float) count;
+  }
+  
+  void getTagActivation() {
+    if(mode==threshold_mode){
+      boolean in_range=false;
+      for (Transmitter transmitter : transmitters){
+        float d = PVector.dist(pos, transmitter.pos);
+        if(d<activation_threshold){
+          in_range=true;
+        }
+      }
+      tag_on=in_range;
+    }
+    
+    else{
+      for (Transmitter transmitter : transmitters){
+        FloatList distances= new FloatList();
+        for (Boid friend : friends){
+          float dist = PVector.dist(friend.pos, transmitter.pos);
+          distances.append(dist);
+        }
+        for ()
+        float my_dist= PVector.dist(pos, transmitter.pos);
+        distances.append(my_dist);
+        distances.sort();
+        
+      }
+    }
   }
 
   PVector getAverageDir () {
@@ -189,19 +238,17 @@ class Boid {
     }
   }
   
-  // ziye
-  PVector getHunger() {
+  PVector getDanger() {
     PVector steer = new PVector(0, 0);
-    for (Food other : foods) {
-      
-      float d = PVector.dist(pos, other.pos);
-      if ((d > 3)) {
-        PVector diff = PVector.sub(other.pos, pos);
-        diff.normalize();
-        diff.div(d);
-        steer.add(diff);
-      } else {
-        eats.add(other);
+    for (Boid other : friends) {
+      if(other.tagged && other.tag_on){
+        float d = PVector.dist(pos, other.pos);
+        if ((d > 0)) {
+          PVector diff = PVector.sub(pos, other.pos);
+          diff.normalize();
+          diff.div(d);
+          steer.add(diff);
+        }   
       }
     }
     return steer;
@@ -213,6 +260,7 @@ class Boid {
       stroke(90);
       //line(this.pos.x, this.pos.y, f.pos.x, f.pos.y);
     }
+    
     noStroke();
     fill(shade, 90, 200);
     pushMatrix();
@@ -223,24 +271,34 @@ class Boid {
     vertex(-7* globalScale, 7* globalScale);
     vertex(-7* globalScale, -7* globalScale);
     endShape(CLOSE);
+    if(tagged){
+      if(tag_on){
+        fill(0, 200, 200);
+        circle(0,0,5);
+      }
+      else{
+        fill(0, 0, 80);
+        circle(0,0,5);  
+      }
+    }
     popMatrix();
   }
 
   // update all those timers!
   void increment () {
-    thinkTimer = (thinkTimer + 1) % 5;
+    thinkTimer = (thinkTimer + 1) % 5; // The thinkTimer is between 0 and 4
   }
 
+  // Ensures the fishes go around the arena
   void wrap () {
     pos.x = (pos.x + width) % width;
     pos.y = (pos.y + height) % height;
   }
   
-  // ziye
-  void eat() {
-    for (Food f : eats) {
-      foods.remove(f);
-    }
-    eats = new ArrayList<Food>();
-  }
+  //void eat() {
+  //  for (Food f : eats) {
+  //    foods.remove(f);
+  //  }
+  //  eats = new ArrayList<Food>();
+  //}
 }

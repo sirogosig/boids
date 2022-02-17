@@ -1,7 +1,7 @@
 Boid barry;
 ArrayList<Boid> boids;
 ArrayList<Avoid> avoids;
-ArrayList<Food> foods; // ziye
+ArrayList<Transmitter> transmitters;
 
 float globalScale = .91;
 float eraseRadius = 20;
@@ -19,6 +19,7 @@ boolean option_crowd = true;
 boolean option_avoid = true;
 boolean option_noise = true;
 boolean option_cohese = true;
+boolean option_danger = true;
 
 // gui crap
 int messageTimer = 0;
@@ -30,7 +31,7 @@ void setup () {
   recalculateConstants();
   boids = new ArrayList<Boid>();
   avoids = new ArrayList<Avoid>();
-  foods = new ArrayList<Food>(); // ziye
+  transmitters = new ArrayList<Transmitter>(); // ziye
   for (int x = 100; x < width - 100; x+= 100) {
     for (int y = 100; y < height - 100; y+= 100) {
       //   boids.add(new Boid(x + random(3), y + random(3)));
@@ -41,7 +42,6 @@ void setup () {
   setupWalls();
 }
 
-// haha
 void recalculateConstants () {
   maxSpeed = 2.1 * globalScale;
   friendRadius = 60 * globalScale;
@@ -86,10 +86,10 @@ void draw () {
     noStroke();
     fill(0, 200, 200);
     ellipse(mouseX, mouseY, 15, 15);
-  } else if (tool == "foods") { // ziye
+  } else if (tool == "transmitters") {
     noStroke();
     fill(100);
-    rect(mouseX, mouseY, 10, 10);
+    triangle(mouseX-10, mouseY+10, mouseX, mouseY-10, mouseX+10, mouseY+10);
   }
   for (int i = 0; i <boids.size(); i++) {
     Boid current = boids.get(i);
@@ -103,9 +103,8 @@ void draw () {
     current.draw();
   }
 
-  // ziye
-  for (int i = 0; i <foods.size(); i++) {
-    Food current = foods.get(i);
+  for (int i = 0; i <transmitters.size(); i++) {
+    Transmitter current = transmitters.get(i);
     //current.go();
     current.draw();
   }
@@ -117,15 +116,18 @@ void draw () {
 }
 
 void keyPressed () {
-  if (key == 'q') {
+  if (key == 'b') {
     tool = "boids";
     message("Add boids");
-  } else if (key == 'w') {
+  } else if (key == 'o') {
     tool = "avoids";
     message("Place obstacles");
   } else if (key == 'e') {
     tool = "erase";
     message("Eraser");
+  } else if (key == 't') {
+    tool = "transmitters";
+    message("Add transmitter");
   } else if (key == '-') {
     message("Decreased scale");
     globalScale *= 0.8;
@@ -151,9 +153,6 @@ void keyPressed () {
     setupWalls();
   } else if (key == '.') {
     setupCircle();
-  } else if (key == 'f') { // ziye
-    tool = "foods";
-    message("Add food");
   }
   recalculateConstants();
 }
@@ -183,8 +182,8 @@ void mousePressed () {
   case "avoids":
     avoids.add(new Avoid(mouseX, mouseY));
     break;
-  case "foods": // ziye
-    foods.add(new Food(mouseX, mouseY));
+  case "transmitters": 
+    transmitters.add(new Transmitter(mouseX, mouseY));
     break;
   }
 }
@@ -196,30 +195,31 @@ void erase () {
       boids.remove(i);
     }
   }
-}
   
-void eat_food (float xx, float yy){//Dan when prey reaches food, use this function to eat food
-  for (int i = 0; i < foods.size(); i++){
-    Food f = foods.get(i);
-    if (f.pos.x == xx && f.pos.y == yy){
-      foods.remove(f);
-    }
-  }
-
   for (int i = avoids.size()-1; i > -1; i--) {
     Avoid b = avoids.get(i);
     if (abs(b.pos.x - mouseX) < eraseRadius && abs(b.pos.y - mouseY) < eraseRadius) {
       avoids.remove(i);
     }
   }
-
-  for (int i = foods.size()-1; i > -1; i--) {
-    Food b = foods.get(i);
+  
+  for (int i = transmitters.size()-1; i > -1; i--) {
+    Transmitter b = transmitters.get(i);
     if (abs(b.pos.x - mouseX) < eraseRadius && abs(b.pos.y - mouseY) < eraseRadius) {
-      foods.remove(i);
+      transmitters.remove(i);
     }
   }
+  
 }
+  
+//void eat_food (float xx, float yy){//Dan when prey reaches food, use this function to eat food
+//  for (int i = 0; i < foods.size(); i++){
+//    Food f = foods.get(i);
+//    if (f.pos.x == xx && f.pos.y == yy){
+//      foods.remove(f);
+//    }
+//  }
+//}
 
 void drawText (String s, float x, float y) {
   fill(0);
