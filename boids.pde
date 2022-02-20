@@ -3,7 +3,7 @@ ArrayList<Boid> boids;
 ArrayList<Avoid> avoids;
 ArrayList<Transmitter> transmitters;
 
-float globalScale = .91;
+float globalScale = .61;
 float eraseRadius = 20;
 String tool = "boids";
 
@@ -13,6 +13,8 @@ float friendRadius;
 float crowdRadius;
 float avoidRadius;
 float coheseRadius;
+float activation_threshold;
+
 
 boolean option_friend = true;
 boolean option_crowd = true;
@@ -26,7 +28,7 @@ int messageTimer = 0;
 String messageText = "";
 
 void setup () {
-  size(1024, 576);
+  size(1300, 731); //Ratio of 1.7777..7..7
   textSize(16);
   recalculateConstants();
   boids = new ArrayList<Boid>();
@@ -38,12 +40,13 @@ void setup () {
       //    boids.add(new Boid(x + random(3), y + random(3)));
     }
   }
-
+  //Uncomment the following to start with an arena
   setupWalls();
 }
 
 void recalculateConstants () {
-  maxSpeed = 2.1 * globalScale;
+  maxSpeed = 1.6 * globalScale; //Old value 2.1
+  activation_threshold= 350 * globalScale; // For transmitters
   friendRadius = 60 * globalScale;
   crowdRadius = (friendRadius / 1.3);
   avoidRadius = 90 * globalScale;
@@ -204,22 +207,13 @@ void erase () {
   }
   
   for (int i = transmitters.size()-1; i > -1; i--) {
-    Transmitter b = transmitters.get(i);
-    if (abs(b.pos.x - mouseX) < eraseRadius && abs(b.pos.y - mouseY) < eraseRadius) {
+    Transmitter trans = transmitters.get(i);
+    if (abs(trans.pos.x - mouseX) < eraseRadius && abs(trans.pos.y - mouseY) < eraseRadius) {
       transmitters.remove(i);
     }
   }
   
 }
-  
-//void eat_food (float xx, float yy){//Dan when prey reaches food, use this function to eat food
-//  for (int i = 0; i < foods.size(); i++){
-//    Food f = foods.get(i);
-//    if (f.pos.x == xx && f.pos.y == yy){
-//      foods.remove(f);
-//    }
-//  }
-//}
 
 void drawText (String s, float x, float y) {
   fill(0);

@@ -1,12 +1,10 @@
-float tagged_probability=0.2;
+float tagged_probability=0.1;
 
 char threshold_mode = 't';  //No communication between tags
-float activation_threshold=250;
-
 char swarm_mode = 's';      //Communication between tags
 float activated_tags_percentage=0.5;
 
-char mode=threshold_mode; // Set mode HERE
+char mode=swarm_mode; // Set mode HERE
 
 class Boid {
   // main fields
@@ -40,13 +38,12 @@ class Boid {
   void go () {
     increment();
     wrap();
-
-    getTagActivation();
     
     // We update friend array every 5 go's
     if (thinkTimer ==0 ) { 
       // update our friend array (lots of square roots)
       getFriends();
+      if(tagged) getTagActivation();
     }
     flock();
     pos.add(move);
@@ -139,18 +136,28 @@ class Boid {
     }
     
     else{
+      boolean closest=false;
       for (Transmitter transmitter : transmitters){
-        FloatList distances= new FloatList();
-        for (Boid friend : friends){
-          float dist = PVector.dist(friend.pos, transmitter.pos);
-          distances.append(dist);
-        }
-        for ()
         float my_dist= PVector.dist(pos, transmitter.pos);
-        distances.append(my_dist);
-        distances.sort();
-        
+        if(my_dist<activation_threshold){
+          FloatList distances= new FloatList(); //List of close boids for that transmitter
+          for(Boid other : boids){
+            if(other==this) continue;
+            if(other.tagged){
+              float dist = PVector.dist(other.pos, transmitter.pos);
+              distances.append(dist);
+            }
+          }
+          distances.sort();
+          if(distances.size()>=1){
+            if(my_dist<distances.get((int)((distances.size()-1)*activated_tags_percentage))){ // If closer than half other tagged boids
+              closest=true;  
+            }
+          }
+          else closest=true;
+        }
       }
+      tag_on=closest;
     }
   }
 
@@ -201,12 +208,12 @@ class Boid {
     PVector steer = new PVector(0, 0);
     int count = 0;
 
-    for (Avoid other : avoids) {
-      float d = PVector.dist(pos, other.pos);
+    for (Avoid avoid : avoids) {
+      float d = PVector.dist(pos, avoid.pos);
       // If the distance is greater than 0 and less than an arbitrary amount (0 when you are yourself)
-      if ((d > 0) && (d < avoidRadius)) {
-        // Calculate vector pointing away from neighbor
-        PVector diff = PVector.sub(pos, other.pos);
+      if (d < avoidRadius){
+        // Calculate vector pointing away from avoid
+        PVector diff = PVector.sub(pos, avoid.pos);
         diff.normalize();
         diff.div(d);        // Weight by distance
         steer.add(diff);
@@ -255,10 +262,12 @@ class Boid {
   }
 
   void draw () {
-    for ( int i = 0; i < friends.size(); i++) {
+    for (int i = 0; i < friends.size(); i++) {
       Boid f = friends.get(i);
-      stroke(90);
-      //line(this.pos.x, this.pos.y, f.pos.x, f.pos.y);
+      if(this.tagged && f.tagged){
+        stroke(90);
+        line(this.pos.x, this.pos.y, f.pos.x, f.pos.y);
+      }
     }
     
     noStroke();
@@ -277,7 +286,7 @@ class Boid {
         circle(0,0,5);
       }
       else{
-        fill(0, 0, 80);
+        fill(0, 0, 50);
         circle(0,0,5);  
       }
     }
