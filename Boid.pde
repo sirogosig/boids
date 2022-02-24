@@ -4,7 +4,7 @@ char threshold_mode = 't';  //No communication between tags
 char swarm_mode = 's';      //Communication between tags
 float activated_tags_percentage=0.5;
 
-char mode=swarm_mode; // Set mode HERE
+char mode=threshold_mode; // Set mode HERE
 
 class Boid {
   // main fields
