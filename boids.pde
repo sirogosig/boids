@@ -4,7 +4,7 @@ ArrayList<Avoid> avoids;
 ArrayList<Transmitter> transmitters;
 
 float globalScale = .61;
-float eraseRadius = 20;
+float eraseRadius = 30;
 String tool = "boids";
 
 // boid control
@@ -26,6 +26,7 @@ boolean option_danger = true;
 // gui crap
 int messageTimer = 0;
 String messageText = "";
+String endangeredText = "";
 
 void setup () {
   size(1300, 731); //Ratio of 1.7777..7..7
@@ -56,10 +57,20 @@ void recalculateConstants () {
 
 void setupWalls() {
   avoids = new ArrayList<Avoid>();
-  for (int x = 0; x < width; x+= 20) {
+  for (int x = 0; x < width; x+= 17) {
     avoids.add(new Avoid(x, 10));
     avoids.add(new Avoid(x, height - 10));
   }
+  
+  //for (int x = 600; x <= 900; x+= 13) {
+  //  avoids.add(new Avoid(x, 500));
+  //  avoids.add(new Avoid(x, 300));
+  //}
+  //for (int y = 300; y < 500; y+= 13) {
+  //  avoids.add(new Avoid(600, y));
+  //  avoids.add(new Avoid(900, y));
+  //}
+  
 }
 
 void setupCircle() {
@@ -94,11 +105,14 @@ void draw () {
     fill(100);
     triangle(mouseX-10, mouseY+10, mouseX, mouseY-10, mouseX+10, mouseY+10);
   }
+  int numberEndangered=0;
   for (int i = 0; i <boids.size(); i++) {
     Boid current = boids.get(i);
     current.go();
     current.draw();
+    if (current.endangered) numberEndangered ++;
   }
+  countEndangered("Number of endangered fish: " + numberEndangered);
 
   for (int i = 0; i <avoids.size(); i++) {
     Avoid current = avoids.get(i);
@@ -164,8 +178,13 @@ void drawGUI() {
   if (messageTimer > 0) {
     fill((min(30, messageTimer) / 30.0) * 255.0);
 
-    text(messageText, 10, height - 20);
+    text(messageText, 10, height - 25);
   }
+  fill(255.0);
+  text(endangeredText, 1080, height - 25);
+  text("Total boids: " + boids.size(), 950, height - 25);
+  text("Tagged fish percentage: " + (int)(100*tagged_probability) + "%", 730, height - 25);
+  text("Tag activation percentage: " + (int)(100*activated_tags_percentage) + "%", 500, height-25);
 }
 
 String s(int count) {
@@ -179,8 +198,22 @@ String on(boolean in) {
 void mousePressed () {
   switch (tool) {
   case "boids":
-    boids.add(new Boid(mouseX, mouseY));
-    message(boids.size() + " Total Boid" + s(boids.size()));
+    int number_tags=int(10*tagged_probability);
+    int[] tags_distribution = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    while(number_tags>0){
+      int index=0;
+      do {
+        index=int(random(10));
+      }while(tags_distribution[index]==1);
+      tags_distribution[index]=1;
+      number_tags--;
+    }
+    for(int i=0; i<10; i++){
+      boolean tagged=false;
+      if(tags_distribution[i]==1) tagged=true;
+      
+      boids.add(new Boid(mouseX, mouseY+2*i,tagged));
+    }
     break;
   case "avoids":
     avoids.add(new Avoid(mouseX, mouseY));
@@ -226,4 +259,8 @@ void drawText (String s, float x, float y) {
 void message (String in) {
   messageText = in;
   messageTimer = (int) frameRate * 3;
+}
+
+void countEndangered (String in) {
+  endangeredText = in;
 }

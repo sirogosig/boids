@@ -1,10 +1,10 @@
-float tagged_probability=0.1;
+float tagged_probability=0.1; // Between 0 and 1
 
 char threshold_mode = 't';  //No communication between tags
 char swarm_mode = 's';      //Communication between tags
-float activated_tags_percentage=0.5;
+float activated_tags_percentage=0.3;
 
-char mode=threshold_mode; // Set mode HERE
+char mode=swarm_mode; // Set mode HERE
 
 class Boid {
   // main fields
@@ -13,6 +13,7 @@ class Boid {
   float shade;
   boolean tagged=false;
   boolean tag_on=false;
+  boolean endangered=false;
   ArrayList<Boid> friends;
   ArrayList<Food> eats;
 
@@ -20,7 +21,7 @@ class Boid {
   int thinkTimer = 0;
 
 
-  Boid (float xx, float yy) {
+  Boid (float xx, float yy, boolean tagged_) {
     move = new PVector(0, 0);
     pos = new PVector(0, 0);
     pos.x = xx;
@@ -30,8 +31,9 @@ class Boid {
     friends = new ArrayList<Boid>();
     eats = new ArrayList<Food>();
     
-    float temp=random(1);
-    if(temp<tagged_probability) tagged=true;
+    if(tagged_) tagged=true;
+    //float temp=random(1);
+    //if(temp<tagged_probability) tagged=true;
     tag_on=false;
   }
 
@@ -43,6 +45,7 @@ class Boid {
     if (thinkTimer ==0 ) { 
       // update our friend array (lots of square roots)
       getFriends();
+      getEndangered();
       if(tagged) getTagActivation();
     }
     flock();
@@ -260,15 +263,21 @@ class Boid {
     }
     return steer;
   }
+  
+  void getEndangered(){
+    for(Transmitter trans : transmitters){
+      if(abs(this.pos.x - trans.pos.x) < 20 && abs(this.pos.y - trans.pos.y) < 20 ) this.endangered=true;
+    }
+  }
 
   void draw () {
-    for (int i = 0; i < friends.size(); i++) {
-      Boid f = friends.get(i);
-      if(this.tagged && f.tagged){
-        stroke(90);
-        line(this.pos.x, this.pos.y, f.pos.x, f.pos.y);
-      }
-    }
+    //for (int i = 0; i < friends.size(); i++) {
+    //  Boid f = friends.get(i);
+    //  if(this.tagged && f.tagged){
+    //    stroke(90);
+    //    line(this.pos.x, this.pos.y, f.pos.x, f.pos.y);
+    //  }
+    //}
     
     noStroke();
     fill(shade, 90, 200);
@@ -303,11 +312,4 @@ class Boid {
     pos.x = (pos.x + width) % width;
     pos.y = (pos.y + height) % height;
   }
-  
-  //void eat() {
-  //  for (Food f : eats) {
-  //    foods.remove(f);
-  //  }
-  //  eats = new ArrayList<Food>();
-  //}
 }
